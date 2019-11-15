@@ -28,7 +28,8 @@ public class Application {
         bank.readOrders();
         bank.readWallets();
         bank.readTransactions();
-
+        bank.getWallets().forEach(wallet -> System.out.println(wallet.toFile()));
+        
         int option;
         while (true) {
             printMenu();
@@ -51,6 +52,7 @@ public class Application {
                     System.out.print("Enter wallet ID: ");
                     int walletId = Integer.parseInt(reader.readLine());
                     bank.makeOrder(orderType, cryptoCoinsOrder, walletId);
+                    bank.updateWalletsFile();
                     break;
                 case 3:
                     System.out.print("Enter sender ID: ");
@@ -60,6 +62,7 @@ public class Application {
                     System.out.print("Enter amount of Crypto Coins: ");
                     double cryptoCoinsTransfer = Double.parseDouble(reader.readLine());
                     bank.makeTransfer(senderId, receiverId, cryptoCoinsTransfer);
+                    bank.updateWalletsFile();
                     break;
                 case 4:
                     System.out.print("Enter wallet ID: ");
