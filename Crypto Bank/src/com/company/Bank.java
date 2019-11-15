@@ -1,7 +1,12 @@
 package com.company;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -216,6 +221,20 @@ public class Bank {
         }
     }
 
+    public void updateWalletsFile() {
+        String dir = System.getProperty("user.dir");
+        try (FileWriter fw = new FileWriter(dir + "\\Files\\wallets.txt");
+             BufferedWriter writer = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(writer)) {
+
+            for (Wallet wallet : this.wallets) {
+                out.print(wallet.toFile());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /*
     --Store information from system's list of transactions
     --into transactions.txt file
@@ -245,17 +264,17 @@ public class Bank {
     */
     public void addWallet(Wallet wallet) {
         this.wallets.add(wallet);
-        this.writeWallets();
+        wallet.writeToFile();
     }
 
     public void addTransaction(Transaction transaction) {
         this.transactions.add(transaction);
-        this.writeTransactions();
+        transaction.writeToFile();
     }
 
     public void addOrder(Order order) {
         this.orders.add(order);
-        this.writeOrders();
+        order.writeToFile();
     }
 
     /*
@@ -326,11 +345,15 @@ public class Bank {
     --and sent to transactions.txt file and registered
     --in the Bank's list of transactions
     */
-    public void makeTransfer(int senderId, int receiverId, double cryptoCoins) {
+    public void makeTransfer(int senderId, int receiverId, double cryptoCoins) throws IOException {
+        String fileDir = System.getProperty("user.dir") + "\\Files\\wallets.txt";
+        Path path = Paths.get(fileDir);
         if (walletExists(senderId) && walletExists(receiverId)) {
             for (Wallet sender : this.wallets) {
                 for (Wallet receiver : this.wallets) {
                     if (sender.getId() == senderId && receiver.getId() == receiverId) {
+                        System.out.println(sender.toFile());
+                        System.out.println(receiver.toFile());
                         if (sender.getCryptoCoins() >= cryptoCoins) {
                             double senderCurrentCoins = sender.getCryptoCoins();
                             sender.setCryptoCoins(senderCurrentCoins - cryptoCoins);
@@ -338,7 +361,6 @@ public class Bank {
                             receiver.setCryptoCoins(receiverCurrentCoins + cryptoCoins);
                             Transaction transaction = new Transaction(senderId, receiverId, cryptoCoins);
                             transaction.writeToFile();
-                            //TODO overwrite wallets information in wallets.txt
                         }
                     }
                 }
@@ -367,22 +389,26 @@ public class Bank {
     */
     public void topTenRichestWallets() {
         ArrayList<Wallet> richestWallets = new ArrayList<>(this.wallets);
-        richestWallets.sort((a, b) ->
-                Double.compare(b.getCryptoCoins(), a.getCryptoCoins()));
+        /*richestWallets.sort((a, b) ->
+                Double.compare(b.getCryptoCoins(), a.getCryptoCoins()));*/
         ArrayList<Transaction> walletTransactions = new ArrayList<>();
-        richestWallets.forEach(wallet -> {
-            System.out.printf("Crypto Coins: %.5f&nTransactions:%n", wallet.getCryptoCoins());
-            for (Transaction t : this.transactions) {
-                if (wallet.getId() == t.getSenderId()
+        richestWallets
+                .stream()
+                .sorted((a, b) -> Double.compare(b.getCryptoCoins(), a.getCryptoCoins()))
+                .forEach(wallet -> {
+                    System.out.printf("Crypto Coins: %.5f%nTransactions:%n", wallet.getCryptoCoins());
+                    for (Transaction t : this.transactions) {
+                    if (wallet.getId() == t.getSenderId()
                         || wallet.getId() == t.getReceiverId()) {
-                    walletTransactions.add(t);
-                    System.out.printf("## %s", t.toString());
+                        walletTransactions.add(t);
+                        System.out.printf("## %s%n", t.toString());
+                    }
                 }
-            }
-            System.out.printf("First transacstion time: %d",
+                System.out.printf("First transaction time: %d%n",
                     walletTransactions.get(0).getTime());
-            System.out.printf("Last transaction time: %d",
+                System.out.printf("Last transaction time: %d%n",
                     walletTransactions.get(walletTransactions.size() - 1).getTime());
+                    System.out.println();
         });
     }
 }
