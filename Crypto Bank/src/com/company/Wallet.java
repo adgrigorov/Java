@@ -1,14 +1,13 @@
 package com.company;
 
 import java.io.*;
-
+import java.util.Random;
 
 public class Wallet {
     private String owner;
     private int id;
     private double money;
     private double cryptoCoins;
-    private static int instanceCount = 0;
     private static final int course = 375;
 
     public Wallet() {
@@ -20,8 +19,9 @@ public class Wallet {
 
     //constructed used to create/add wallet
     public Wallet(String owner, double money) {
+        Random random = new Random();
         this.owner = owner;
-        this.id = ++instanceCount;
+        this.id = random.nextInt(Integer.MAX_VALUE - 1);
         this.money = money;
         this.cryptoCoins = money / course;
         Transaction transaction = new Transaction(Integer.MAX_VALUE, this.id, this.cryptoCoins);
