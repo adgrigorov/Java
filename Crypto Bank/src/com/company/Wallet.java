@@ -7,8 +7,7 @@ public class Wallet {
     private String owner;
     private int id;
     private double money;
-    private double cryptoCoins;
-    private static final int course = 375;
+    private double cryptoCoins;    
 
     public Wallet() {
         this.owner = "";
@@ -23,7 +22,7 @@ public class Wallet {
         this.owner = owner;
         this.id = random.nextInt(Integer.MAX_VALUE - 1);
         this.money = money;
-        this.cryptoCoins = money / course;
+        this.cryptoCoins = money / Bank.course;
         Transaction transaction = new Transaction(Integer.MAX_VALUE, this.id, this.cryptoCoins);
         transaction.writeToFile();
     }
