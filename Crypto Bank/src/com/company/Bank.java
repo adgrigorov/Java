@@ -1,12 +1,9 @@
 package com.company;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +38,7 @@ public class Bank {
     private ArrayList<Wallet> wallets;
     private ArrayList<Transaction> transactions;
     private ArrayList<Order> orders;
+    public final static int course = 375;
 //-----------------------------------------------------------------------//
     /*
     --Initialize system
