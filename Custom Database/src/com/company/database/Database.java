@@ -1,4 +1,5 @@
 package com.company.database;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -102,6 +103,8 @@ public class Database extends Column {
         }
     }
 
+
+    //PROBLEM
     public void insertInto(String table, String[] columns, String[] values) {
         int tableIndex = getTableIndex(table);
 
@@ -119,13 +122,13 @@ public class Database extends Column {
                         //System.out.println(tokens[valueIndex]);
                         //System.out.println("index: " + valueIndex);
                         String value = tokens[valueIndex];
-                        column.addValue(value);
+                        column.addValue(value); //HERE
                         valueIndex++;
                     } else if (column.getType().equals("Int")) {
                         //System.out.println(tokens[valueIndex]);
                         //System.out.println("index: " + valueIndex);
                         int value = Integer.parseInt(tokens[valueIndex]);
-                        column.addValue(value);
+                        column.addValue(value); //OR HERE
                         valueIndex++;
                     }
                 }

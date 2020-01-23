@@ -1,15 +1,14 @@
 package com.company.database;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+//May be of type String or Integer
 public class Column<T> {
     private String name;
     private String type;
     private List<T> values;
     //private Map<String, List<T>> mapValues;
-
 
     public String getType() {
         return type;
