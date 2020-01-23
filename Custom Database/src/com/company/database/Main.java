@@ -1,0 +1,87 @@
+package com.company.database;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Main {
+
+    public static void main(String[] args) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        //menu();
+
+        Database database = new Database();
+
+        final Pattern CREATE_QUERY = Pattern.compile("CREATE TABLE (?<tableName>\\S+) \\((?<columns>\\S+)\\)");
+        final Pattern INSERT_QUERY = Pattern.compile("INSERT INTO (?<tableName>\\S+) \\((?<columns>\\S+)\\) VALUES (?<values>[\\S, ]+\\))");
+        final Pattern DROP_QUERY = Pattern.compile("DROP TABLE (?<tableName>\\w+)");
+        final String LIST_TABLES = "LIST TABLES";
+        final Pattern TABLE_INFO = Pattern.compile("TABLE INFO (?<tableName>\\w+)");
+
+
+        DBMS_interface();
+        String query = reader.readLine();
+
+        while (!query.equals("QUIT")) {
+
+            if (query.contains("CREATE")) {
+                Matcher matcher = CREATE_QUERY.matcher(query);
+                if (matcher.find()) {
+                    String table = matcher.group("tableName");
+                    String columns = matcher.group("columns");
+                    database.createTable(table, columns);
+                } else {
+                    System.out.println("INVALID QUERY");
+                }
+            }
+
+            else if (query.contains("DROP")) {
+                Matcher matcher = DROP_QUERY.matcher(query);
+                if (matcher.find()) {
+                    String table = matcher.group("tableName");
+                    database.dropTable(table);
+                } else {
+                    System.out.println("INVALID QUERY");
+                }
+            }
+
+            else if (query.equals(LIST_TABLES)) {
+                database.listTables();
+            }
+
+            else if (query.contains("TABLE INFO")) {
+                Matcher matcher = TABLE_INFO.matcher(query);
+                if (matcher.find()) {
+                    String table = matcher.group("tableName");
+                    database.showTableInfo(table);
+                }
+            }
+
+            else if (query.contains("INSERT")) {
+                Matcher matcher = INSERT_QUERY.matcher(query);
+                if (matcher.find()) {
+                    String table = matcher.group("tableName");
+                    String[] columns = matcher.group("columns").split(",");
+                    String[] values = matcher.group("values")
+                            .substring(1, matcher.group("values").length() - 1)
+                            .split("\\)\\s?,\\s?\\(");
+
+                    database.insertInto(table, columns, values);
+                }
+            }
+
+            else {
+                System.out.println("INVALID QUERY");
+            }
+
+            DBMS_interface();
+            query = reader.readLine();
+        }
+    }
+
+    public static void DBMS_interface() {
+        System.out.print("SSql> ");
+    }
+}
