@@ -13,17 +13,17 @@ public class Main {
         Database database = new Database();
 
         final Pattern CREATE_QUERY = Pattern.compile("CREATE TABLE (?<tableName>\\S+) \\((?<columns>\\S+)\\)");
-        final Pattern INSERT_QUERY = Pattern.compile("INSERT INTO (?<tableName>\\S+) \\((?<columns>\\S+)\\) VALUES (?<values>[\\S, ]+\\))");
         final Pattern DROP_QUERY = Pattern.compile("DROP TABLE (?<tableName>\\w+)");
         final String LIST_TABLES = "LIST TABLES";
         final Pattern TABLE_INFO = Pattern.compile("TABLE INFO (?<tableName>\\w+)");
+        final Pattern INSERT_QUERY = Pattern.compile("INSERT INTO (?<tableName>\\S+) VALUES (?<values>[\\S, ]+\\))");
+        final Pattern SELECT_QUERY = Pattern.compile("^SELECT (?<rows>\\S+) FROM (?<tableName>\\S+)(( WHERE (?<columnIs>\\S+) (?<condition>[<>!=]{0,2}) (?<thanValue>[\\w\\d]+))?(( ?(?<andOr>AND?|OR)? (?<sColumnIs>\\S+) (?<sCondition>[<>!=]{0,2}) (?<sThanValue>[\\w\\d]+)))?( (?<distinct>DISTINCT))?)?$");
 
         /*
          * Queries are read from console input - several types:
          * --CREATE TABLE - creates a table in the database
          *     example: CREATE TABLE People (ID:Int,Name:String)
-         *              CREATE TABLE People (ID:Int, Name:String) is considered invalid query
-         *                                                        due to the space between columns
+         *              CREATE TABLE People (ID:Int, Name:String) is invalid query -> space between columns
          *
          * --DROP TABLE - removes a table from the database
          *     example: DROP TABLE People
@@ -32,15 +32,25 @@ public class Main {
          *
          * --TABLE INFO - gives information about a table and its columns (name and type)
          *     example: TABLE INFO People
-         *     output: People (ID:int, Name:String)
+         *     expected output: People (ID:int, Name:String)
          *             0 rows total
          *
          * --INSERT INTO - inserts values into the given table
-         *     example: INSERT INTO People (ID,Name) VALUES (1, Ivan)
-         *              INSERT INTO People (ID,Name) VALUES (2, Peter), (3,Georgi)
-         *              INSERT INTO People (ID, Name) VALUES (4, Toni) is considered invalid query
-         *                                                            due to the space between columns
-         *                                                            similar to CREATE TABLE query
+         *     example: INSERT INTO People VALUES (1, "Ivan")
+         *              INSERT INTO People VALUES (2, "Peter"), (3, "Georgi")
+         *              INSERT INTO People VALUES ("Tomas", 4) is not a valid query -> column types do not match
+         *              INSERT INTO People VALUES (6) is not a valid query -> column count is different from value count
+         *              INSERT INTO People (ID,Name) VALUES (1, Ivan) is not a valid query -> string type values must be
+         *                                                            inside quotes: "Ivan" f.e.
+         *              INSERT INTO People (ID, Name) VALUES (4, "Toni") is considered invalid query -> space between columns
+         *                                                               similar to CREATE TABLE query
+         *
+         *              expected output from INSERT INTO People VALUES (1, "Ivan"):
+         *                      1 row inserted
+         *              expected output from INSERT INTO People VALUES (2, "Peter") , (3, "Georgi")
+         *                      2 rows inserted
+         *              expected output from INSERT INTO People VALUES ("Tomas", 4)
+         *                      Incompatible value type to Int column. -> cancels INSERT query
          *
          * --Others to be implemented
          */
@@ -87,12 +97,11 @@ public class Main {
                 Matcher matcher = INSERT_QUERY.matcher(query);
                 if (matcher.find()) {
                     String table = matcher.group("tableName");
-                    String[] columns = matcher.group("columns").split(",");
                     String[] values = matcher.group("values")
                             .substring(1, matcher.group("values").length() - 1)
                             .split("\\)\\s?,\\s?\\(");
-
-                    database.insertInto(table, columns, values);
+                    
+                    database.insertInto(table, values);
                 }
             }
 
@@ -105,7 +114,7 @@ public class Main {
         }
     }
 
-    private static void DBMS_interface() {
+    public static void DBMS_interface() {
         System.out.print("SSql> ");
     }
 }
