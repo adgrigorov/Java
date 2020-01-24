@@ -100,7 +100,7 @@ public class Database {
             System.out.println("TABLE " + table + " DOES NOT EXIST");
         }
     }
-    
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void insertInto(String table, String[] values) {
         int tableIndex = getTableIndex(table);
@@ -112,12 +112,15 @@ public class Database {
             int rowsInserted = 0;
 
             for (String v : values) {
-                /*if (v.length() != t.getColumns().size()) {
-                    System.out.println("INVALID VALUES AT " + rowsInserted + 1 + " INDEX.\n" +
-                            "INSERTED VALUES UP TO " + rowsInserted + " INDEX.");
-                }*/
 
                 String[] tokens = v.split("\\s?,\\s?");
+
+                if (tokens.length != t.getColumns().size()) {
+                    System.out.println("INVALID VALUES AT INDEX " + (rowsInserted + 1) +
+                            "\nINSERTED VALUES UP TO INDEX " + rowsInserted);
+                    return;
+                }
+
                 int valueIndex = 0;
                 for (int colIndex = 0; colIndex < t.getColumns().size(); colIndex++) {
                     Column column = t.getColumns().get(colIndex);
@@ -174,16 +177,57 @@ public class Database {
         }
     }
 
-    public void selectFrom(String table, String[] values) {
+    public void selectFrom(String rows, String table) {
+        int tableIndex = getTableIndex(table);
 
+        if (tableIndex != -1) {
+            if (rows.equals("*")) {
+                for (Column<?> column : database.get(tableIndex).getColumns()) {
+                    System.out.println(column.getName());
+                    for (Object value : column.getValues()) {
+                        System.out.println(value);
+                    }
+                }
+            }
+        }
+
+        else {
+            System.out.println("TABLE " + table + " DOES NOT EXIST.");
+        }
     }
 
     public void selectFromWhere(String table, String[] columns, String[]... values) {
 
     }
 
-    public void removeFromWhere(String table, String[] columns, String[]... values) {
+    public void removeAllFrom(String table) {
+        int tableIndex = getTableIndex(table);
+        int rowsRemoved = 0;
 
+        if (tableIndex != -1) {
+            for (Column<?> column : database.get(tableIndex).getColumns()) {
+                int rowsBeforeRemove = column.getValues().size();
+                column.clearValues();
+                rowsRemoved += rowsBeforeRemove;
+            }
+            rowsRemoved /= database.get(tableIndex).getColumns().size();
+            System.out.println(rowsRemoved + " rows removed.");
+        }
+
+        else {
+            System.out.println("TABLE " + table + " DOES NOT EXIST.");
+        }
+    }
+
+    public void removeFromWhere(String table, String whereRowIs, String operator, String thanValue) {
+        int tableIndex = getTableIndex(table);
+        int rowsRemoved = 0;
+
+        if (tableIndex != -1) {
+
+
+
+        }
     }
 
     private boolean tableExists(String table) {
