@@ -1,12 +1,12 @@
 package com.company.database;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Database extends Column {
+public class Database {
     private List<Table> database;
+
     //Map<String, List<Table>> mapDb;
 
     public Database() {
@@ -53,28 +53,26 @@ public class Database extends Column {
             System.out.println("DATABASE IS EMPTY");
         } else {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("CONFIRM DROP TABLE ".concat(table));
-            System.out.println("YES\t/\tNO");
-            String confirmation = reader.readLine();
-            if (confirmation.equals("YES")) {
-                int tableIndex = -1;
-                for (int i = 0; i < database.size(); i++) {
-                    if (database.get(i).getName().equals(table)) {
-                        tableIndex = i;
-                        break;
-                    }
-                } //end for
+            int tableIndex = getTableIndex(table);
 
-                if (tableIndex != -1) {
+            if (tableIndex != -1) {
+                System.out.println("CONFIRM DROP TABLE ".concat(table));
+                System.out.println("YES\t/\tNO");
+                String confirmation = reader.readLine();
+                if (confirmation.equals("YES")) {
                     database.remove(tableIndex);
                     System.out.println("TABLE " + table + " DROPPED.");
+                } else if (confirmation.equals("NO")) {
+                    System.out.println("DROP OPERATION ABORTED.");
                 } else {
-                    System.out.println("NO SUCH TABLE EXISTS.");
+                    System.out.println("INVALID CHOICE.");
                 }
-            } else if (confirmation.equals("NO")) {
-                System.out.println("DROP OPERATION ABORTED.");
+            } //end if
+
+            else {
+                System.out.println("TABLE " + table + " DOES NOT EXIST.");
             }
-        }
+        } //end else(size)
     }
 
     public void listTables() {
@@ -99,23 +97,29 @@ public class Database extends Column {
         }
 
         if (!foundTable) {
-            System.out.println("TABLE DOES NOT EXIST");
+            System.out.println("TABLE " + table + " DOES NOT EXIST");
         }
     }
-
-
+    
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public void insertInto(String table, String[] columns, String[] values) {
+    public void insertInto(String table, String[] values) {
         int tableIndex = getTableIndex(table);
 
         if (tableIndex != -1) {
 
             Table t = database.get(tableIndex);
 
+            int rowsInserted = 0;
+
             for (String v : values) {
+                /*if (v.length() != t.getColumns().size()) {
+                    System.out.println("INVALID VALUES AT " + rowsInserted + 1 + " INDEX.\n" +
+                            "INSERTED VALUES UP TO " + rowsInserted + " INDEX.");
+                }*/
+
                 String[] tokens = v.split("\\s?,\\s?");
                 int valueIndex = 0;
-                for (int colIndex = 0; colIndex < columns.length; colIndex++) {
+                for (int colIndex = 0; colIndex < t.getColumns().size(); colIndex++) {
                     Column column = t.getColumns().get(colIndex);
                     //System.out.printf("index: %d, name: %s\n", colIndex, column.getName());
                     if (column.getType().equals("String")) {
@@ -126,8 +130,8 @@ public class Database extends Column {
                             System.out.println("Incompatible value type into String type column.");
                             return;
                         } else {
-                            value = value.substring(0, value.length() - 1);
-                            column.addValue(value); //HERE
+                            value = value.substring(1, value.length() - 1);
+                            column.addValue(value);
                             valueIndex++;
                         }
                     } //end if string
@@ -143,7 +147,7 @@ public class Database extends Column {
                         else {
                             try {
                                 int value = Integer.parseInt(tokens[valueIndex]);
-                                column.addValue(value); //OR HERE
+                                column.addValue(value);
                                 valueIndex++;
                             } catch (NumberFormatException e) {
                                 System.out.println("Invalid number.");
@@ -158,8 +162,11 @@ public class Database extends Column {
                         System.out.println("INVALID VALUES.");
                         return;
                     }
+
                 } //end for columns
+                rowsInserted++;
             } //end for values
+            System.out.println(rowsInserted + " rows inserted.");
         } //end if -1
 
         else {
@@ -179,9 +186,23 @@ public class Database extends Column {
 
     }
 
+    private boolean tableExists(String table) {
+        for (Table t : database) {
+            if (t.getName().equals(table)) return true;
+        }
+        return false;
+    }
+
     private int getTableIndex(String table) {
         for (int i = 0; i < database.size(); i++) {
-            if (database.get(i).getName().equals(table)) return i;
-        } return -1;
+            if (database.get(i).getName().equals(table)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private boolean isNumber (char c) {
+        return c >= '0' && c <= '9';
     }
 }
