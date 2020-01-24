@@ -1,12 +1,12 @@
 package com.company.database;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Database {
+public class Database extends Column {
     private List<Table> database;
-
     //Map<String, List<Table>> mapDb;
 
     public Database() {
@@ -53,26 +53,28 @@ public class Database {
             System.out.println("DATABASE IS EMPTY");
         } else {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            int tableIndex = getTableIndex(table);
+            System.out.println("CONFIRM DROP TABLE ".concat(table));
+            System.out.println("YES\t/\tNO");
+            String confirmation = reader.readLine();
+            if (confirmation.equals("YES")) {
+                int tableIndex = -1;
+                for (int i = 0; i < database.size(); i++) {
+                    if (database.get(i).getName().equals(table)) {
+                        tableIndex = i;
+                        break;
+                    }
+                } //end for
 
-            if (tableIndex != -1) {
-                System.out.println("CONFIRM DROP TABLE ".concat(table));
-                System.out.println("YES\t/\tNO");
-                String confirmation = reader.readLine();
-                if (confirmation.equals("YES")) {
+                if (tableIndex != -1) {
                     database.remove(tableIndex);
                     System.out.println("TABLE " + table + " DROPPED.");
-                } else if (confirmation.equals("NO")) {
-                    System.out.println("DROP OPERATION ABORTED.");
                 } else {
-                    System.out.println("INVALID CHOICE.");
+                    System.out.println("NO SUCH TABLE EXISTS.");
                 }
-            } //end if
-
-            else {
-                System.out.println("TABLE " + table + " DOES NOT EXIST.");
+            } else if (confirmation.equals("NO")) {
+                System.out.println("DROP OPERATION ABORTED.");
             }
-        } //end else(size)
+        } //end else
     }
 
     public void listTables() {
@@ -97,10 +99,12 @@ public class Database {
         }
 
         if (!foundTable) {
-            System.out.println("TABLE " + table + " DOES NOT EXIST");
+            System.out.println("TABLE DOES NOT EXIST");
         }
     }
 
+
+    //PROBLEM
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void insertInto(String table, String[] values) {
         int tableIndex = getTableIndex(table);
@@ -183,11 +187,27 @@ public class Database {
         if (tableIndex != -1) {
             if (rows.equals("*")) {
                 for (Column<?> column : database.get(tableIndex).getColumns()) {
-                    System.out.println(column.getName());
+                    System.out.printf("| %s |", column.getName());
                     for (Object value : column.getValues()) {
-                        System.out.println(value);
+                        System.out.printf("\n| %s |", value);
                     }
                 }
+            }
+
+            else if (columnExists(rows)) {
+                for (Table t : database) {
+                    for (Column c : t.getColumns()) {
+                        if (c.getName().equals(rows)) {
+                            for (Object row : c.getValues()) {
+                                System.out.println(row);
+                            }
+                        }
+                    }
+                }
+            }
+
+            else {
+                System.out.println("COLUMN " + rows + " DOES NOT EXISTS IN TABLE " + table + ".");
             }
         }
 
@@ -211,12 +231,13 @@ public class Database {
                 rowsRemoved += rowsBeforeRemove;
             }
             rowsRemoved /= database.get(tableIndex).getColumns().size();
-            System.out.println(rowsRemoved + " rows removed.");
         }
 
         else {
             System.out.println("TABLE " + table + " DOES NOT EXIST.");
         }
+
+        System.out.println(rowsRemoved + " rows removed.");
     }
 
     public void removeFromWhere(String table, String whereRowIs, String operator, String thanValue) {
@@ -230,23 +251,39 @@ public class Database {
         }
     }
 
-    private boolean tableExists(String table) {
-        for (Table t : database) {
-            if (t.getName().equals(table)) return true;
-        }
-        return false;
-    }
-
     private int getTableIndex(String table) {
         for (int i = 0; i < database.size(); i++) {
-            if (database.get(i).getName().equals(table)) {
-                return i;
-            }
-        }
-        return -1;
+            if (database.get(i).getName().equals(table)) return i;
+        } return -1;
     }
 
-    private boolean isNumber (char c) {
+    private boolean isNumber(char c) {
         return c >= '0' && c <= '9';
+    }
+
+    private void draw(int rows, int columns) {
+        for (int i = 0; i < columns; i++) {
+            System.out.print("|       |");
+        }
+        System.out.println();
+        for (int i = 0; i < columns; i++) {
+            System.out.print("---------");
+        }
+
+        for (int i = 0; i < rows; i++) {
+            System.out.println("|        |");
+            System.out.println("---------");
+        }
+    }
+
+    private boolean columnExists(String column) {
+        for (Table table : database) {
+            for (Column<?> tableColumn : table.getColumns()) {
+                if (tableColumn.getName().equals(column)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

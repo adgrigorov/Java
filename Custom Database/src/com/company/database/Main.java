@@ -156,11 +156,6 @@ public class Main {
                             String operator = matcher.group("operator");
                             String thanValue = matcher.group("thanValue");
 
-                            System.out.println(table);
-                            System.out.println(whereRowIs);
-                            System.out.println(operator);
-                            System.out.println(thanValue);
-
                             database.removeFromWhere(table, whereRowIs, operator, thanValue);
                         }
                     }

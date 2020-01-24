@@ -71,4 +71,8 @@ public class Column<T> {
     public T getValueFromPosition(int position) {
         return this.values.get(position);
     }
+
+    protected void clearValues() {
+        this.values.clear();
+    }
 }
