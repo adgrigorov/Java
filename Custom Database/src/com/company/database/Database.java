@@ -104,7 +104,7 @@ public class Database extends Column {
     }
 
 
-    //PROBLEM
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void insertInto(String table, String[] columns, String[] values) {
         int tableIndex = getTableIndex(table);
 
@@ -116,23 +116,54 @@ public class Database extends Column {
                 String[] tokens = v.split("\\s?,\\s?");
                 int valueIndex = 0;
                 for (int colIndex = 0; colIndex < columns.length; colIndex++) {
-                    Column<?> column = t.getColumns().get(colIndex);
-                    System.out.printf("index: %d, name: %s\n", colIndex, column.getName());
+                    Column column = t.getColumns().get(colIndex);
+                    //System.out.printf("index: %d, name: %s\n", colIndex, column.getName());
                     if (column.getType().equals("String")) {
                         //System.out.println(tokens[valueIndex]);
                         //System.out.println("index: " + valueIndex);
                         String value = tokens[valueIndex];
-                        column.addValue(value); //HERE
-                        valueIndex++;
-                    } else if (column.getType().equals("Int")) {
+                        if (value.charAt(0) != '"' && value.charAt(value.length() - 1) != '"') {
+                            System.out.println("Incompatible value type into String type column.");
+                            return;
+                        } else {
+                            value = value.substring(0, value.length() - 1);
+                            column.addValue(value); //HERE
+                            valueIndex++;
+                        }
+                    } //end if string
+
+                    else if (column.getType().equals("Int")) {
                         //System.out.println(tokens[valueIndex]);
                         //System.out.println("index: " + valueIndex);
-                        int value = Integer.parseInt(tokens[valueIndex]);
-                        column.addValue(value); //OR HERE
-                        valueIndex++;
+                        if (!isNumber(tokens[valueIndex].charAt(0))) {
+                            System.out.println("Incompatible value type into Int type column.");
+                            return;
+                        }
+
+                        else {
+                            try {
+                                int value = Integer.parseInt(tokens[valueIndex]);
+                                column.addValue(value); //OR HERE
+                                valueIndex++;
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid number.");
+                                e.printStackTrace();
+                                return;
+                            }
+                        } //end else try-catch
+
+                    } //end else if int
+
+                    else {
+                        System.out.println("INVALID VALUES.");
+                        return;
                     }
-                }
-            }
+                } //end for columns
+            } //end for values
+        } //end if -1
+
+        else {
+            System.out.println("TABLE " + table + " DOES NOT EXIST.");
         }
     }
 
@@ -154,7 +185,3 @@ public class Database extends Column {
         } return -1;
     }
 }
-
-
-
-
