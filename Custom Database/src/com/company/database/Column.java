@@ -1,13 +1,14 @@
 package com.company.database;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 //May be of type String or Integer
-public class Column<T> {
+public class Column<T> implements Serializable {
     private String name;
     private String type;
-    private List<T> values;
+    private List<T> rows;
     //private Map<String, List<T>> mapValues;
 
     public String getType() {
@@ -20,24 +21,24 @@ public class Column<T> {
 
     public Column() {
         this.name = null;
-        this.values = null;
+        this.rows = null;
     }
 
     public Column(String name, String type) {
         this.name = name;
         this.type = type;
-        this.values = new ArrayList<T>();
+        this.rows = new ArrayList<T>();
     }
 
     public Column(String name) {
         this.name = name;
-        this.values = new ArrayList<T>();
+        this.rows = new ArrayList<T>();
     }
 
     public Column(String name, T value) {
         this.name = name;
-        this.values = new ArrayList<T>();
-        this.values.add(value);
+        this.rows = new ArrayList<T>();
+        this.rows.add(value);
     }
 
     public String getName() {
@@ -48,31 +49,46 @@ public class Column<T> {
         this.name = name;
     }
 
-    public List<T> getValues() {
-        return values;
+    public List<T> getRows() {
+        return rows;
     }
 
-    public void setValues(List<T> values) {
-        this.values = values;
+    public void setRows(List<T> rows) {
+        this.rows = rows;
     }
 
     public void addValue(T value) {
-        this.values.add(value);
+        this.rows.add(value);
     }
 
     public void addValues(List<T> values) {
-        this.values.addAll(values);
+        this.rows.addAll(values);
     }
 
     public void addValueAtPosition(int position, T value) {
-        this.values.add(position, value);
+        this.rows.add(position, value);
     }
 
     public T getValueFromPosition(int position) {
-        return this.values.get(position);
+        return this.rows.get(position);
     }
 
     protected void clearValues() {
-        this.values.clear();
+        this.rows.clear();
+    }
+
+    public void writeValueToFile(String tableName, String value) {
+        String dir = System.getProperty("user.dir");
+        String path = dir + "\\Database\\Helpers\\" + tableName + "_" + this.name + "_values";
+
+        try {
+            FileOutputStream f = new FileOutputStream(path);
+            ObjectOutputStream o = new ObjectOutputStream(f);
+
+            o.writeObject(value);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

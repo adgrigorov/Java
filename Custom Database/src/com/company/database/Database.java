@@ -1,11 +1,9 @@
 package com.company.database;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
-public class Database extends Column {
+public class Database implements Serializable {
     private List<Table> database;
     //Map<String, List<Table>> mapDb;
 
@@ -103,8 +101,6 @@ public class Database extends Column {
         }
     }
 
-
-    //PROBLEM
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void insertInto(String table, String[] values) {
         int tableIndex = getTableIndex(table);
@@ -181,33 +177,46 @@ public class Database extends Column {
         }
     }
 
-    public void selectFrom(String rows, String table) {
+    public void selectFrom(String[] rows, String table, boolean distinct) {
         int tableIndex = getTableIndex(table);
 
-        if (tableIndex != -1) {
-            if (rows.equals("*")) {
-                for (Column<?> column : database.get(tableIndex).getColumns()) {
-                    System.out.printf("| %s |", column.getName());
-                    for (Object value : column.getValues()) {
-                        System.out.printf("\n| %s |", value);
-                    }
-                }
-            }
+        Set<Object> distinctRows = new HashSet<>();
 
-            else if (columnExists(rows)) {
-                for (Table t : database) {
-                    for (Column c : t.getColumns()) {
-                        if (c.getName().equals(rows)) {
-                            for (Object row : c.getValues()) {
-                                System.out.println(row);
+        if (tableIndex != -1) {
+            for (String r : rows) {
+                if (r.equals("*")) {
+                    for (Column<?> column : database.get(tableIndex).getColumns()) {
+                        System.out.printf("| %s |", column.getName());
+                        for (Object row : column.getRows()) {
+                            if (!distinct) {
+                                System.out.printf("\n| %s |", row);
+                            } else {
+                                if (distinctRows.add(row)) System.out.println(row);
                             }
                         }
                     }
                 }
-            }
 
-            else {
-                System.out.println("COLUMN " + rows + " DOES NOT EXISTS IN TABLE " + table + ".");
+                else if (columnExists(r)) {
+                    for (Table t : database) {
+                        for (Column c : t.getColumns()) {
+                            if (c.getName().equals(r)) {
+                                System.out.println(r);
+                                for (Object row : c.getRows()) {
+                                    if (!distinct) {
+                                        System.out.println(row);
+                                    } else {
+                                        if (distinctRows.add(row)) System.out.println(row);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                else {
+                    System.out.println("COLUMN " + r + " DOES NOT EXISTS IN TABLE " + table + ".");
+                }
             }
         }
 
@@ -216,8 +225,27 @@ public class Database extends Column {
         }
     }
 
-    public void selectFromWhere(String table, String[] columns, String[]... values) {
+    public void selectFromWhere(String[] rows, String table, String whereRowIs, String condition, String thanValue, boolean distinct) {
+        int tableIndex = getTableIndex(table);
 
+        Set<Object> distinctRows = new LinkedHashSet<>();
+
+        if (tableIndex != -1) {
+            for (String r : rows) {
+                if (r.equals("*")) {
+                    for (Column<?> column : database.get(tableIndex).getColumns()) {
+                        System.out.println(column.getName());
+                        for (Object row : column.getRows()) {
+                            switch (condition) {
+                                case ">": {
+                                    //if (row > thanValue)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void removeAllFrom(String table) {
@@ -226,7 +254,7 @@ public class Database extends Column {
 
         if (tableIndex != -1) {
             for (Column<?> column : database.get(tableIndex).getColumns()) {
-                int rowsBeforeRemove = column.getValues().size();
+                int rowsBeforeRemove = column.getRows().size();
                 column.clearValues();
                 rowsRemoved += rowsBeforeRemove;
             }
@@ -246,12 +274,10 @@ public class Database extends Column {
 
         if (tableIndex != -1) {
 
-
-
         }
     }
 
-    private int getTableIndex(String table) {
+    public int getTableIndex(String table) {
         for (int i = 0; i < database.size(); i++) {
             if (database.get(i).getName().equals(table)) return i;
         } return -1;
@@ -285,5 +311,53 @@ public class Database extends Column {
             }
         }
         return false;
+    }
+
+    public void writeTablesToFile() {
+        String dir = System.getProperty("user.dir");
+        try {
+            for (Table t : database)
+            {
+                FileOutputStream f = new FileOutputStream(dir + "\\Database\\" + t.getName());
+                ObjectOutputStream o = new ObjectOutputStream(f);
+
+                o.writeObject(t);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public void readTablesFromFile(List<String> tableFiles) {
+        String dir = System.getProperty("user.dir");
+        //ArrayList<Table> database = new ArrayList<>();
+        try {
+            for (String file : tableFiles) {
+                Table table = null;
+                boolean fileHasData = true;
+                FileInputStream fis = new FileInputStream(dir + "\\Database\\" + file);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                while (fileHasData) {
+                    if (fis.available() !=0 ) {
+                        table = (Table) ois.readObject();
+                        this.database.add(table);
+                    } else {
+                        fileHasData = false;
+                    }
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Table getAddedTable() {
+        return this.database.get(this.database.size() - 1);
+    }
+
+    public Table getTableAtIndex(int index) {
+        return this.database.get(index);
     }
 }

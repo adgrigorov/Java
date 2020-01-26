@@ -1,9 +1,10 @@
 package com.company.database;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Table {
+public class Table implements Serializable {
 
     private String name;
     private List<Column<?>> columns;
@@ -53,8 +54,8 @@ public class Table {
             }
         }
         System.out.print(")\n");
-        if (this.columns.get(0).getValues() != null) {
-            System.out.println(String.format("Total %d rows", this.columns.get(0).getValues().size()));
+        if (this.columns.get(0).getRows() != null) {
+            System.out.println(String.format("Total %d rows", this.columns.get(0).getRows().size()));
         }
         else System.out.println("Total 0 rows");
     }
@@ -64,11 +65,43 @@ public class Table {
             System.out.print("COLUMN: ");
             System.out.println(column.getName());
             //int columnDataSize = column.getValues().size();
-            List<?> columnValues = column.getValues();
+            List<?> columnValues = column.getRows();
             System.out.println("VALUES:");
             for (Object columnValue : columnValues) {
                 System.out.println("---" + columnValue);
             }
         }
     }
+
+    public void writeColumnsToFile() {
+        String dir = System.getProperty("user.dir");
+        String path = dir + "\\Database\\Helpers\\" + this.name + "_columns";
+
+        try {
+            for (Column c : this.columns)
+            {
+                FileOutputStream f = new FileOutputStream(path);
+                ObjectOutputStream o = new ObjectOutputStream(f);
+
+                o.writeObject(c);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /*public void writeTableToFile() {
+        String dir = System.getProperty("user.dir");
+        try (FileWriter fw = new FileWriter(dir + "\\Database\\" + this.name + ".txt", true);
+             BufferedWriter writer = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(writer)) {
+
+            out.print();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }*/
 }

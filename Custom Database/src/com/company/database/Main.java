@@ -1,7 +1,8 @@
 package com.company.database;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,6 +12,10 @@ public class Main {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         Database database = new Database();
+
+        //List<String> tableFiles = new ArrayList<>();
+        //tableFiles = readTableNamesFromFile();
+
 
         final Pattern CREATE_QUERY = Pattern.compile("^CREATE TABLE (?<tableName>\\S+) \\((?<columns>\\S+)\\)$");
         final Pattern DROP_QUERY = Pattern.compile("^DROP TABLE (?<tableName>\\w+)$");
@@ -68,6 +73,8 @@ public class Main {
          * --Others to be implemented
          */
 
+        //database.readTablesFromFile(tableFiles);
+
         DBMS_interface();
         String query = reader.readLine();
 
@@ -79,6 +86,16 @@ public class Main {
                     String table = matcher.group("tableName");
                     String columns = matcher.group("columns");
                     database.createTable(table, columns);
+                    //database.writeTablesToFile();
+                    Table t = database.getAddedTable();
+                    t.writeColumnsToFile();
+                    List<Column<?>> cols = t.getColumns();
+                    for (Column<?> c : cols) {
+                        c.writeValueToFile(t.getName(), c.getName());
+                    }
+                    //tableFiles.add(table);
+                    writeTableNameToFile(table);
+
                 } else {
                     System.out.println("INVALID QUERY");
                 }
@@ -89,6 +106,7 @@ public class Main {
                 if (matcher.find()) {
                     String table = matcher.group("tableName");
                     database.dropTable(table);
+                    database.writeTablesToFile();
                 } else {
                     System.out.println("INVALID QUERY");
                 }
@@ -116,6 +134,14 @@ public class Main {
                     //for (String v : values) System.out.println(v);
                     //System.out.println(values.length);
                     database.insertInto(table, values);
+                    database.writeTablesToFile();
+                    int tableIndex = database.getTableIndex(table);
+                    Table t = database.getTableAtIndex(tableIndex);
+                    List<Column<?>> cols = t.getColumns();
+                    for (Column<?> c : cols) {
+                        c.writeValueToFile(t.getName(), c.getName());
+                    }
+
                 }
             }
 
@@ -125,13 +151,24 @@ public class Main {
                 if (matcher.find()) {
                     String[] selectQuery = query.split("\\s+");
                     int queryLength = selectQuery.length;
+                    String[] rows = matcher.group("rows").split(",");
+                    String table = matcher.group("tableName");
 
                     switch (queryLength) {
+                        //SELECT row(s) FROM Table
                         case 4: {
-                            String rows = matcher.group("rows");
-                            String table = matcher.group("tableName");
-                            database.selectFrom(rows, table);
+                            database.selectFrom(rows, table, false);
                             //System.out.printf("%s\n%s", rows, table);
+                        }
+                        //SELECT row(s) FROM Table DISTINCT
+                        case 5: {
+                            database.selectFrom(rows, table, true);
+                        }
+                        //SELECT row(s) FROM Table WHERE col_value </>/=/!= value
+                        case 9: {
+                            String whereRowIs = matcher.group("rowIs");
+                            String condition = matcher.group("condition");
+                            String thanValue = matcher.group("thanValue");
                         }
                     }
                 }
@@ -148,16 +185,17 @@ public class Main {
                         case 3: {
                             String table = matcher.group("tableName");
                             database.removeAllFrom(table);
+                            database.writeTablesToFile();
                         }
 
-                        case 7: {
+                        /*case 7: {
                             String table = matcher.group("tableName");
                             String whereRowIs = matcher.group("rowIs");
                             String operator = matcher.group("operator");
                             String thanValue = matcher.group("thanValue");
 
                             database.removeFromWhere(table, whereRowIs, operator, thanValue);
-                        }
+                        }*/
                     }
                 }
 
@@ -172,7 +210,39 @@ public class Main {
         }
     }
 
-    public static void DBMS_interface() {
+    private static void DBMS_interface() {
         System.out.print("SSql> ");
+    }
+
+    private static void writeTableNameToFile(String table) {
+        String dir = System.getProperty("user.dir");
+        String fileName = "\\tables.txt";
+        try (FileWriter fw = new FileWriter(dir + fileName, true);
+             BufferedWriter writer = new BufferedWriter(fw)) {
+
+            writer.write(table);
+            writer.write("\n");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static List<String> readTableNamesFromFile() {
+        String dir = System.getProperty("user.dir");
+        List<String> tableFiles = new ArrayList<>();
+        try (FileReader fr = new FileReader("tables.txt");
+            BufferedReader reader = new BufferedReader(fr)) {
+
+            String table = reader.readLine();
+            while (table != null) {
+                tableFiles.add(table);
+                table = reader.readLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return tableFiles;
     }
 }
